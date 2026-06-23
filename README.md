@@ -69,6 +69,12 @@ Releases are also published as a Roblox model on the Creator Hub. Insert it unde
 - **Lease + renewal:** holding a lock starts a background renewal loop that extends the TTL every `renewalInterval` seconds. If a server crashes, renewal stops, the TTL lapses, and the lock becomes available again automatically.
 - **Retry:** failed acquisitions back off exponentially (with jitter), bounded by `maxRetries` and/or a timeout.
 
+### Internal Safety & Paradigms
+Canopus is engineered using strict systems programming paradigms to ensure predictable, crash-free execution:
+- **Result Monads:** Internal error handling discards standard Luau `(boolean, string?)` tuples in favor of explicit `Result.Ok(T)` and `Result.Err(E)` types. This eliminates unhandled edge-cases during network failures.
+- **Opaque Types & Private Symbols:** Memory-sensitive properties (like active thread pointers and lock keys) are stored via the **Opaque Symbol Pattern** using `newproxy(false)` as dictionary keys. The internal state is completely hidden from reflection and iteration.
+- **Immutable State:** All internal configurations and exported types are passed through `table.freeze()` to prevent runtime mutation by other scripts.
+
 See [`tests/`](tests/) and [`src/Internal/`](src/Internal/) for the exact algorithms.
 
 ---

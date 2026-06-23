@@ -4,7 +4,7 @@ version = "0.1.0"
 license = "LicenseRef-CC-BY-ND-4.0"
 realm = "shared"
 registry = "https://github.com/UpliftGames/wally-index"
-description = "Distributed lock manager for Roblox using MemoryStoreService"
+description = "Robust distributed lock manager for Roblox featuring autonomous lock renewal and memory-safe architecture."
 authors = ["baranyerlikaya"]
 include = [
     "default.project.json",
