@@ -2,7 +2,7 @@
 
 Distributed lock manager for Roblox — make sure something happens **exactly once**, anywhere in your game's server fleet.
 
-![status](https://img.shields.io/badge/status-v0.1.0-blue)
+![status](https://img.shields.io/badge/status-v0.1.1-blue)
 ![language](https://img.shields.io/badge/language-Luau%20strict-2c2c2c)
 ![license](https://img.shields.io/badge/license-see%20LICENSE-lightgrey)
 
@@ -43,7 +43,7 @@ Canopus gives you a simple primitive for all of these: *"only one server does th
 
 ```toml
 [dependencies]
-Canopus = "baranyerlikaya/canopus@0.1.0"
+Canopus = "baranyerlikaya/canopus@0.1.1"
 ```
 
 ```bash

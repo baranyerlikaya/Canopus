@@ -1,6 +1,6 @@
 [package]
 name = "baranyerlikaya/canopus"
-version = "0.1.0"
+version = "0.1.1"
 license = "LicenseRef-CC-BY-ND-4.0"
 realm = "shared"
 registry = "https://github.com/UpliftGames/wally-index"
