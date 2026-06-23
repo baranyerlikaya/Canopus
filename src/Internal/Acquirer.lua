@@ -1,9 +1,4 @@
 --!strict
---[[
-    Core atomic acquire/release logic. Every lock state transition goes
-    through MemoryStoreClient.update() so that contention between servers is
-    resolved by Roblox's atomic UpdateAsync rather than by client-side checks.
-]]
 
 local Constants = require(script.Parent.Parent.Shared.Constants)
 local Config = require(script.Parent.Parent.Shared.Config)
@@ -30,7 +25,7 @@ local function tryAcquireOnce(
     local now = workspace:GetServerTimeNow()
     local ttl = leaseDuration + Constants.TTL_SAFETY_MARGIN
 
-    local success, result = MemoryStoreClient.update(
+    local resultMonad = MemoryStoreClient.update(
         config.storeName,
         lockName,
         function(existing: any): any
@@ -41,7 +36,7 @@ local function tryAcquireOnce(
             local entry = LockEntry.decode(existing)
 
             if entry == nil then
-                -- Corrupt data: treat the slot as free and reclaim it defensively.
+
                 return LockEntry.encode(LockEntry.new(jobId, now + leaseDuration, 1, now))
             end
 
@@ -62,20 +57,21 @@ local function tryAcquireOnce(
         ttl
     )
 
-    if not success then
-        return false, nil, Errors.ERR_MEMORY_STORE_UNAVAILABLE
-    end
-
-    local decoded = LockEntry.decode(result)
-    if decoded == nil then
-        return false, nil, Errors.ERR_MEMORY_STORE_UNAVAILABLE
-    end
-
-    if LockEntry.isOwnedBy(decoded, jobId) then
-        return true, decoded, nil
-    end
-
-    return false, nil, Errors.ERR_CONTENDED
+    return resultMonad:match(
+        function(result: any)
+            local decoded = LockEntry.decode(result)
+            if decoded == nil then
+                return false, nil, Errors.ERR_MEMORY_STORE_UNAVAILABLE
+            end
+            if LockEntry.isOwnedBy(decoded, jobId) then
+                return true, decoded, nil
+            end
+            return false, nil, Errors.ERR_CONTENDED
+        end,
+        function(_err: string)
+            return false, nil, Errors.ERR_MEMORY_STORE_UNAVAILABLE
+        end
+    )
 end
 
 function Acquirer.acquire(
@@ -135,19 +131,20 @@ function Acquirer.tryAcquire(lockName: string, ownerId: string?): Handle?
     return nil
 end
 
-function Acquirer.release(handle: Handle): boolean
-    if not handle._active then
+function Acquirer.release(handle: any): boolean
+    local state = handle[Handle.Private]
+    if not state.active then
         return false
     end
 
-    Renewer.stop(handle)
-    handle._active = false
+    Renewer.stop(handle :: Handle)
+    state.active = false
 
     local config = Config.get()
-    local lockName = handle._lockName
-    local jobId = handle._jobId
+    local lockName = state.lockName
+    local jobId = state.jobId
 
-    local success = MemoryStoreClient.update(
+    local resultMonad = MemoryStoreClient.update(
         config.storeName,
         lockName,
         function(existing: any): any
@@ -165,15 +162,16 @@ function Acquirer.release(handle: Handle): boolean
         Constants.RELEASE_TTL
     )
 
-    return success
+    return resultMonad:isOk()
 end
 
 function Acquirer.getOwner(lockName: string): string?
     local config = Config.get()
-    local success, raw = MemoryStoreClient.read(config.storeName, lockName)
-    if not success then
+    local resultMonad = MemoryStoreClient.read(config.storeName, lockName)
+    if resultMonad:isErr() then
         return nil
     end
+    local raw = resultMonad:unwrap()
 
     local entry = LockEntry.decode(raw)
     if entry == nil then

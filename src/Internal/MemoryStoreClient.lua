@@ -1,13 +1,9 @@
 --!strict
---[[
-    Thin wrapper around MemoryStoreService SortedMap operations. Every
-    MemoryStore access made by Canopus passes through this module so that
-    error handling and logging stay in one place.
-]]
 
 local MemoryStoreService = game:GetService("MemoryStoreService")
+local Result = require(script.Parent.Parent.Shared.Result)
 
-local Constants = require(script.Parent.Parent.Shared.Constants)
+type Result<T, E> = Result.Result<T, E>
 
 local MemoryStoreClient = {}
 
@@ -31,30 +27,32 @@ function MemoryStoreClient.update(
     key: string,
     transform: (existing: any) -> any,
     ttl: number
-): (boolean, any)
+): Result<any, string>
     local map = getMap(storeName)
     local success, result = pcall(function()
         return map:UpdateAsync(key, transform, ttl)
     end)
 
     if not success then
-        return false, result
+        return Result.Err(tostring(result))
     end
 
-    return true, result
+    return Result.Ok(result)
 end
 
-function MemoryStoreClient.read(storeName: string, key: string): (boolean, any)
+function MemoryStoreClient.read(storeName: string, key: string): Result<any, string>
     local map = getMap(storeName)
     local success, result = pcall(function()
         return map:GetAsync(key)
     end)
 
     if not success then
-        return false, result
+        return Result.Err(tostring(result))
     end
 
-    return true, result
+    return Result.Ok(result)
 end
+
+table.freeze(MemoryStoreClient)
 
 return MemoryStoreClient

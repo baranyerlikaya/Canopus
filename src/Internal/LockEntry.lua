@@ -1,7 +1,4 @@
 --!strict
---[[
-    LockEntry struct construction, JSON encode/decode, and validation helpers.
-]]
 
 local HttpService = game:GetService("HttpService")
 
@@ -94,12 +91,6 @@ function LockEntry.refresh(entry: LockEntry, now: number, leaseDuration: number)
     }
 end
 
---[[
-    Marks an entry as already expired. Used to release a lock: returning nil
-    from MemoryStoreSortedMap:UpdateAsync's transform does NOT delete the
-    key (it aborts the write, same as DataStoreService:UpdateAsync), so a
-    release has to write an expired entry instead of trying to delete one.
-]]
 function LockEntry.expire(entry: LockEntry): LockEntry
     return {
         owner = entry.owner,

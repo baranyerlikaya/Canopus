@@ -1,8 +1,4 @@
 --!strict
---[[
-    Minimal signal/event implementation with no external dependencies.
-    Supports Connect and Fire, and per-connection Disconnect.
-]]
 
 local Signal = {}
 Signal.__index = Signal

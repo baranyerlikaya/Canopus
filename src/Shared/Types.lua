@@ -1,8 +1,11 @@
 --!strict
---[[
-    Shared type definitions used across the Canopus package.
-]]
 
+local Result = require(script.Parent.Result)
+
+export type Result<T, E> = Result.Result<T, E>
+
+export type LockName = string
+export type JobId = string
 export type LockEntry = {
     owner: string,
     expiry: number,
@@ -32,12 +35,6 @@ export type AcquireOptions = {
 }
 
 export type Handle = {
-    _lockName: string,
-    _jobId: string,
-    _version: number,
-    _leaseDuration: number,
-    _active: boolean,
-    _renewerThread: thread?,
     isActive: (self: Handle) -> boolean,
     renew: (self: Handle) -> boolean,
     release: (self: Handle) -> boolean,
@@ -45,4 +42,4 @@ export type Handle = {
     getVersion: (self: Handle) -> number,
 }
 
-return {}
+return table.freeze({})

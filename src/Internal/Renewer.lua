@@ -1,9 +1,4 @@
 --!strict
---[[
-    Background renewal for held locks. Owns the actual MemoryStore renewal
-    transform; the periodic loop and a manual single-shot renew both call
-    into the same renewOnce() so behavior never diverges between the two.
-]]
 
 local Constants = require(script.Parent.Parent.Shared.Constants)
 local Config = require(script.Parent.Parent.Shared.Config)
@@ -17,7 +12,6 @@ type Handle = Types.Handle
 
 local Renewer = {}
 
-local activeThreads: { [Handle]: thread } = {}
 
 local onLockLost: Signal.SignalInstance = Signal.new()
 Renewer.onLockLost = onLockLost
@@ -25,11 +19,13 @@ Renewer.onLockLost = onLockLost
 function Renewer.renewOnce(handle: Handle): boolean
     local config = Config.get()
     local storeName = config.storeName
-    local lockName = handle._lockName
-    local jobId = handle._jobId
+    local state = handle[Handle.Private]
+    local lockName = state.lockName
+    local jobId = state.jobId
+    local leaseDuration = state.leaseDuration
     local now = workspace:GetServerTimeNow()
 
-    local success, result = MemoryStoreClient.update(
+    local resultMonad = MemoryStoreClient.update(
         storeName,
         lockName,
         function(existing: any): any
@@ -43,53 +39,63 @@ function Renewer.renewOnce(handle: Handle): boolean
             end
 
             return LockEntry.encode(
-                LockEntry.bumpVersion(LockEntry.refresh(entry, now, handle._leaseDuration))
+                LockEntry.bumpVersion(LockEntry.refresh(entry, now, leaseDuration))
             )
         end,
-        handle._leaseDuration + Constants.TTL_SAFETY_MARGIN
+        leaseDuration + Constants.TTL_SAFETY_MARGIN
     )
 
-    if not success then
-        return false
-    end
-
-    local decoded = LockEntry.decode(result)
-    if decoded == nil or not LockEntry.isOwnedBy(decoded, jobId) then
-        return false
-    end
-
-    handle._version = decoded.version
-    return true
+    return resultMonad:match(
+        function(result: any)
+            if result == nil then
+                return false
+            end
+            local entry = LockEntry.decode(result)
+            if entry ~= nil then
+                state.version = entry.version
+                return true
+            end
+            return false
+        end,
+        function(_err: string)
+            return false
+        end
+    )
 end
 
 function Renewer.start(handle: Handle): ()
+    local state = handle[Handle.Private]
+    if not state.active then
+        return
+    end
+
     local config = Config.get()
+    local interval = config.renewalInterval
 
     local thread = task.spawn(function()
-        while handle._active do
-            task.wait(config.renewalInterval)
-            if not handle._active then
-                return
+        while state.active do
+            task.wait(interval)
+            if not state.active then
+                break
             end
 
-            local renewed = Renewer.renewOnce(handle)
-            if not renewed then
-                handle._active = false
-                activeThreads[handle] = nil
-                onLockLost:Fire(handle._lockName, Errors.ERR_LOCK_LOST)
-                return
+            local success = Renewer.renewOnce(handle)
+            if not success and state.active then
+                state.active = false
+                Renewer.onLockLost:Fire(state.lockName, Errors.ERR_LOCK_LOST)
+                break
             end
         end
     end)
 
-    activeThreads[handle] = thread
-    handle._renewerThread = thread
+    state.renewerThread = thread
 end
 
 function Renewer.stop(handle: Handle): ()
-    local thread = activeThreads[handle]
+    local state = handle[Handle.Private]
+    local thread = state.renewerThread
     if thread ~= nil then
-        activeThreads[handle] = nil
+        state.renewerThread = nil
         if coroutine.status(thread) ~= "dead" then
             task.cancel(thread)
         end

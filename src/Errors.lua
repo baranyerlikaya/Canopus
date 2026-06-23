@@ -1,9 +1,4 @@
 --!strict
---[[
-    Typed error constants used throughout Canopus. These are returned as the
-    error string from public API calls rather than thrown, except where a
-    misconfiguration must fail loudly (ERR_INVALID_CONFIG).
-]]
 
 local Errors = {
     ERR_TIMEOUT = "ERR_TIMEOUT",

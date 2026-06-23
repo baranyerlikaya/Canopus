@@ -1,8 +1,4 @@
 --!strict
---[[
-    Canopus -- distributed lock manager for Roblox built on MemoryStoreService.
-    Public API facade. See README.md for full usage documentation.
-]]
 
 local Shared = script.Shared
 local Internal = script.Internal

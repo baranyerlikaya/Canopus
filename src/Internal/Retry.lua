@@ -1,7 +1,4 @@
 --!strict
---[[
-    Pure exponential backoff with jitter. No side effects, fully unit testable.
-]]
 
 local Retry = {}
 

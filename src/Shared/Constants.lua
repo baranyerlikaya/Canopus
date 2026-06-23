@@ -1,7 +1,4 @@
 --!strict
---[[
-    Magic numbers and the package-wide logger used across Canopus.
-]]
 
 local Constants = {}
 
@@ -12,7 +9,7 @@ Constants.DEFAULT_MAX_RETRIES = 0
 Constants.DEFAULT_STORE_NAME = "CanopusLocks"
 
 Constants.TTL_SAFETY_MARGIN = 5
-Constants.RELEASE_TTL = 1 -- MemoryStoreSortedMap:UpdateAsync requires expiration > 0
+Constants.RELEASE_TTL = 1 
 Constants.MAX_BACKOFF_SECONDS = 5
 Constants.JITTER_RANGE = 0.2
 

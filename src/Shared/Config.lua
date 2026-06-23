@@ -1,8 +1,4 @@
 --!strict
---[[
-    Default configuration values and merge/validation logic for Canopus.
-    Holds the package's single mutable piece of global state: the active config.
-]]
 
 local Constants = require(script.Parent.Constants)
 local Types = require(script.Parent.Types)
@@ -73,7 +69,7 @@ function Config.merge(overrides: ConfigOverrides?): Config
     end
 
     Config.validate(merged)
-    return merged
+    return table.freeze(merged)
 end
 
 function Config.set(overrides: ConfigOverrides?): ()
