@@ -1,0 +1,20 @@
+[package]
+name = "baranyerlikaya/canopus"
+version = "0.1.0"
+license = "LicenseRef-CC-BY-ND-4.0"
+realm = "shared"
+registry = "https://github.com/UpliftGames/wally-index"
+description = "Distributed lock manager for Roblox using MemoryStoreService"
+authors = ["baranyerlikaya"]
+include = [
+    "default.project.json",
+    "src/**",
+    "README.md",
+    "LICENSE",
+    "CONTRIBUTING.md",
+]
+
+[dependencies]
+
+[dev-dependencies]
+TestEZ = "roblox/testez@0.4.1"

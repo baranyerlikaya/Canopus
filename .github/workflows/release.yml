@@ -1,0 +1,45 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*.*.*"
+
+jobs:
+  publish:
+    name: Publish
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Aftman
+        uses: ok-nick/setup-aftman@v0.4.2
+
+      - name: Install toolchain
+        run: aftman install
+
+      - name: Wally login
+        run: wally login --token ${{ secrets.WALLY_AUTH_TOKEN }}
+
+      - name: Publish to Wally
+        run: wally publish
+
+      - name: Build release model
+        run: rojo build default.project.json -o canopus.rbxm
+
+      - name: Upload to Roblox Creator Hub
+        env:
+          ROBLOX_API_KEY: ${{ secrets.ROBLOX_API_KEY }}
+          ROBLOX_ASSET_ID: ${{ secrets.ROBLOX_ASSET_ID }}
+        run: |
+          curl -X PATCH \
+            "https://apis.roblox.com/assets/v1/assets/${ROBLOX_ASSET_ID}" \
+            -H "x-api-key: ${ROBLOX_API_KEY}" \
+            -F "request={\"assetId\":\"${ROBLOX_ASSET_ID}\"};type=application/json" \
+            -F "fileContent=@canopus.rbxm;type=application/octet-stream"
+
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: canopus-rbxm
+          path: canopus.rbxm

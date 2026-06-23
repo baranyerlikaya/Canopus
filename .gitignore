@@ -1,0 +1,13 @@
+*.rbxl
+*.rbxlx
+*.rbxm
+sourcemap.json
+Packages/
+DevPackages/
+wally.lock
+
+# Developer local tests & benchmarks
+benchmark/
+tests/
+examples/
+HANDOFF.md

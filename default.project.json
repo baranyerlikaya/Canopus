@@ -1,0 +1,27 @@
+{
+  "name": "Canopus",
+  "tree": {
+    "$className": "DataModel",
+    "ReplicatedStorage": {
+      "$className": "ReplicatedStorage",
+      "Packages": {
+        "$className": "Folder",
+        "Canopus": {
+          "$path": "src"
+        }
+      },
+      "DevPackages": {
+        "$path": "DevPackages"
+      }
+    },
+    "ServerScriptService": {
+      "$className": "ServerScriptService",
+      "CanopusExamples": {
+        "$path": "examples"
+      },
+      "CanopusBenchmark": {
+        "$path": "benchmark"
+      }
+    }
+  }
+}

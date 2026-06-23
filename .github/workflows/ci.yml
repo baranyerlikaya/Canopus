@@ -1,0 +1,49 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  lint:
+    name: Lint & Format
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Aftman
+        uses: ok-nick/setup-aftman@v0.4.2
+
+      - name: Install toolchain
+        run: aftman install
+
+      - name: Selene lint
+        run: selene src
+
+      - name: StyLua format check
+        run: stylua --check src tests examples
+
+  unit-tests:
+    name: Unit Tests
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Aftman
+        uses: ok-nick/setup-aftman@v0.4.2
+
+      - name: Install toolchain
+        run: aftman install
+
+      - name: Install Wally dependencies
+        run: wally install
+
+      - name: Build test place
+        run: rojo build default.project.json -o canopus-test.rbxl
+
+      - name: Run TestEZ unit suite via run-in-roblox
+        uses: rojo-rbx/run-in-roblox@v0.0.1
+        with:
+          place: canopus-test.rbxl
+          script: tests/runner.server.lua
