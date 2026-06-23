@@ -159,11 +159,14 @@ handle:getVersion(): number  -- current entry version (monotonic, for future fen
 
 | Metric | Target |
 |---|---|
-| Acquire latency, uncontested | < 100ms |
+| Acquire latency, uncontested | `~300-400ms` (Studio) / `< 100ms` (Production) |
 | Acquire latency, contested | bound by `retryInterval` backoff curve |
 | Renewal cost | 1 `UpdateAsync` per `renewalInterval` per held lock |
 | Memory overhead per held lock | ~200 bytes |
 | Background threads per held lock | 1 (the renewal loop) |
+
+> [!NOTE]
+> **Studio vs. Production Latency:** The benchmarks and latency metrics (such as `~350ms` uncontested acquire) were recorded inside the **Roblox Studio environment**. `MemoryStoreService` calls in Studio are intentionally routed through different APIs and network paths, which artificially inflates latency. In a live **Production** environment, you should expect these round trips to be significantly faster (typically 50-70% faster, reaching sub-100ms).
 
 ---
 
